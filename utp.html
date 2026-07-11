@@ -471,7 +471,9 @@ function extractYoutubeId(link) {
         const url = new URL(link);
         if (url.hostname.includes('youtu.be')) return url.pathname.slice(1);
         if (url.searchParams.get('v')) return url.searchParams.get('v');
-        const embedMatch = url.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+        const embedMatch = u
+            
+        rl.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
         if (embedMatch) return embedMatch[1];
     } catch (e) {}
     return null;
