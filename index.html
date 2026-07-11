@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberLab — Dashboard</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <style>
+        :root {
+            --bg-0: #060a14;
+            --bg-1: #0b1224;
+            --panel: #0e1730;
+            --line: #1e2c4d;
+            --neon: #22d3ff;
+            --neon-dim: #22d3ff33;
+            --neon-2: #7c5cff;
+            --danger: #ff3b6b;
+            --ok: #2dffb0;
+            --warn: #ffb020;
+            --text: #e8edf9;
+            --text-dim: #8ea0c7;
+            --mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --sans: 'Space Grotesk', 'Segoe UI', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: radial-gradient(1200px 600px at 80% -10%, #12224a55, transparent 60%),
+                        radial-gradient(900px 500px at -10% 20%, #1a0f3a55, transparent 60%),
+                        var(--bg-0);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            padding: 0;
+        }
+        .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+        nav {
+            background: #060a14cc;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--line);
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 20px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--text);
+        }
+        .brand img { height: 32px; width: auto; border-radius: 8px; border: 1px solid var(--line); padding: 2px; background: var(--panel); }
+        .brand span { color: var(--neon); }
+        .navlinks { display: flex; gap: 4px; flex-wrap: wrap; }
+        .navlinks a {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: var(--mono);
+            transition: all .2s;
+            border: 1px solid transparent;
+        }
+        .navlinks a:hover { color: var(--neon); background: #ffffff08; }
+        .navlinks a.active { color: var(--neon); border-color: var(--neon); background: #0d1a2f; }
+
+        .hero { padding: 30px 0 20px; }
+        .hero-header { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .hero-header img { height: 60px; width: auto; border-radius: 12px; border: 1px solid var(--line); padding: 4px; background: var(--panel); box-shadow: 0 0 30px -10px var(--neon-dim); }
+        .eyebrow { font-family: var(--mono); color: var(--neon); font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 8px; margin: 0; }
+        .eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--neon); }
+        h1 {
+            font-size: clamp(1.6rem, 3.5vw, 2.8rem);
+            margin: 8px 0 6px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            line-height: 1.12;
+        }
+        h1 .highlight { color: var(--neon); text-shadow: 0 0 20px var(--neon-dim); }
+        h1 .highlight-danger { color: var(--danger); text-shadow: 0 0 20px var(--danger-dim); }
+        h1 .highlight-ok { color: var(--ok); text-shadow: 0 0 20px var(--ok); }
+        .lede { color: var(--text-dim); max-width: 600px; font-size: 0.95rem; margin-bottom: 16px; }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .menu-card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            padding: 20px 16px;
+            text-align: center;
+            transition: all .3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text);
+        }
+        .menu-card:hover { transform: translateY(-4px); border-color: var(--neon); box-shadow: 0 8px 30px -10px var(--neon-dim); }
+        .menu-card .icon { font-size: 2.2rem; margin-bottom: 6px; }
+        .menu-card h3 { font-size: 0.95rem; margin: 0 0 2px; }
+        .menu-card p { color: var(--text-dim); font-size: 0.75rem; margin: 0; }
+        .menu-card .tag { display: inline-block; font-family: var(--mono); font-size: 0.5rem; padding: 2px 8px; border-radius: 20px; margin-top: 6px; background: var(--line); color: var(--text-dim); }
+        .menu-card .tag.blue { background: #0d1a2f; color: var(--neon); }
+        .menu-card .tag.danger { background: #1a0a0a; color: var(--danger); }
+        .menu-card .tag.purple { background: #1a0a2a; color: var(--neon-2); }
+        .menu-card .tag.green { background: #0a1a0f; color: var(--ok); }
+        .menu-card .tag.warn { background: #1a1a0a; color: var(--warn); }
+
+        .progress-box {
+            background: #080d1c;
+            border-radius: 10px;
+            padding: 14px 18px;
+            border: 1px solid var(--line);
+            margin-top: 18px;
+        }
+        .progress-box .label { font-size: 0.78rem; color: var(--text-dim); }
+        .progress-box .track { height: 5px; background: var(--line); border-radius: 4px; margin-top: 4px; overflow: hidden; }
+        .progress-box .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--neon), var(--ok)); border-radius: 4px; transition: width .5s; }
+        .progress-box .stats { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 0.65rem; color: var(--text-dim); margin-top: 2px; }
+
+        footer { padding: 20px 0 16px; text-align: center; color: var(--text-dim); font-size: 0.65rem; font-family: var(--mono); border-top: 1px solid var(--line); margin-top: 24px; }
+        .dot { color: var(--neon); }
+        @media(max-width:600px) { .navbar { flex-direction: column; align-items: stretch; gap: 4px; } .navlinks { justify-content: center; } .menu-grid { grid-template-columns: 1fr 1fr; } }
+        @media(max-width:400px) { .menu-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="navbar">
+        <div class="brand"><img src="logo.jpg" alt="CyberLab">Cyber<span>Lab</span></div>
+        <div class="navlinks">
+            <a href="index.html" class="active">🏠 Beranda</a>
+            <a href="livemap.html">🌍 Live Map</a>
+            <a href="sqli.html">💀 SQLi</a>
+            <a href="malware.html">🐛 Malware</a>
+            <a href="utp.html">🔧 UTP</a>
+        </div>
+    </div>
+</nav>
+
+<div class="wrap">
+    <header class="hero">
+        <div class="hero-header">
+            <img src="logo.jpg" alt="CyberLab">
+            <div>
+                <div class="eyebrow">LAB SIMULASI KEAMANAN SIBER</div>
+            </div>
+        </div>
+
+        <!-- ===== KALIMAT HERO BARU ===== -->
+        <h1>
+            Jangan cuma baca ancaman siber.<br>
+            <span class="highlight">Pelajari Prosesnya</span>,<br>
+            <span class="highlight-ok">Cari Tau Pencegahannya!</span>
+        </h1>
+
+        <p class="lede">
+            🛡️ CyberLab membantumu memahami cara kerja serangan siber secara visual — 
+            dari <strong style="color:var(--neon);">SQL Injection</strong>, 
+            <strong style="color:var(--danger);">Malware</strong>, 
+            sampai <strong style="color:var(--ok);">praktik crimping UTP</strong>.
+            Bukan cuma lihat, tapi <strong style="color:var(--warn);">pahami proses dan cegah</strong>!
+        </p>
+    </header>
+
+    <div class="menu-grid">
+        <a href="livemap.html" class="menu-card">
+            <div class="icon">🌍</div>
+            <h3>Live Threat Map</h3>
+            <p>Peta serangan siber global real-time</p>
+            <span class="tag danger">LIVE</span>
+        </a>
+        <a href="sqli.html" class="menu-card">
+            <div class="icon">💀</div>
+            <h3>SQL Injection</h3>
+            <p>Simulasi serangan + analisa 6 tahap</p>
+            <span class="tag blue">Interaktif</span>
+        </a>
+        <a href="malware.html" class="menu-card">
+            <div class="icon">🐛</div>
+            <h3>Malware Attack</h3>
+            <p>Trojan, Worm, Backdoor + 5 aspek</p>
+            <span class="tag purple">Animasi</span>
+        </a>
+        <a href="utp.html" class="menu-card">
+            <div class="icon">🔧</div>
+            <h3>UTP Crimping</h3>
+            <p>Praktik Straight & Crossover + verifikasi</p>
+            <span class="tag green">Praktik</span>
+        </a>
+    </div>
+
+    <div class="progress-box">
+        <div class="label">📊 Progress Belajar</div>
+        <div class="track"><div class="fill" style="width:0%;"></div></div>
+        <div class="stats"><span>0 dari 4 modul selesai</span><span>0%</span></div>
+    </div>
+
+    <footer>
+        <span class="dot">•</span> CyberLab — SMK Negeri 1 Surabaya <span class="dot">•</span> LIDM 2025 <span class="dot">•</span> seluruh data bersifat tiruan
+    </footer>
+</div>
+
+</body>
+</html>

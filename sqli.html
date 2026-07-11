@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CyberLab — SQL Injection</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <style>
+        :root {
+            --bg-0: #060a14;
+            --bg-1: #0b1224;
+            --panel: #0e1730;
+            --line: #1e2c4d;
+            --neon: #22d3ff;
+            --neon-dim: #22d3ff33;
+            --neon-2: #7c5cff;
+            --danger: #ff3b6b;
+            --danger-dim: #ff3b6b33;
+            --ok: #2dffb0;
+            --warn: #ffb020;
+            --text: #e8edf9;
+            --text-dim: #8ea0c7;
+            --mono: 'JetBrains Mono', 'Fira Code', monospace;
+            --sans: 'Space Grotesk', 'Segoe UI', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: radial-gradient(1200px 600px at 80% -10%, #12224a55, transparent 60%),
+                        radial-gradient(900px 500px at -10% 20%, #1a0f3a55, transparent 60%),
+                        var(--bg-0);
+            color: var(--text);
+            font-family: var(--sans);
+            min-height: 100vh;
+            padding: 0;
+        }
+        .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+        nav {
+            background: #060a14cc;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--line);
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1080px;
+            margin: 0 auto;
+            padding: 0 20px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; color: var(--text); }
+        .brand img { height: 32px; width: auto; border-radius: 8px; border: 1px solid var(--line); padding: 2px; background: var(--panel); }
+        .brand span { color: var(--neon); }
+        .navlinks { display: flex; gap: 4px; flex-wrap: wrap; }
+        .navlinks a {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-family: var(--mono);
+            transition: all .2s;
+            border: 1px solid transparent;
+        }
+        .navlinks a:hover { color: var(--neon); background: #ffffff08; }
+        .navlinks a.active { color: var(--neon); border-color: var(--neon); background: #0d1a2f; }
+
+        .page-title { padding: 16px 0 8px; }
+        .page-title h2 { font-size: 1.4rem; margin: 0; }
+        .page-title h2 span { color: var(--neon); }
+        .page-title p { color: var(--text-dim); font-size: 0.88rem; margin: 4px 0 0; }
+
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media(max-width:760px){ .grid2 { grid-template-columns: 1fr; } }
+
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--neon), #0ea5e9);
+            color: #00121f; font-weight: 700; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+            font-size: 0.8rem; font-family: var(--sans); transition: transform .15s, box-shadow .15s;
+        }
+        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px -6px var(--neon); }
+        .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
+        .btn.ok { background: linear-gradient(135deg, var(--ok), #1a9f6b); color: #00121f; }
+
+        .login-box { max-width: 340px; }
+        .login-box h3 { margin: 0 0 2px; font-size: 0.95rem; }
+        .login-box .sub { color: var(--text-dim); font-size: 0.75rem; margin-bottom: 12px; }
+        .field { margin-bottom: 8px; }
+        .field label { display: block; font-size: 0.65rem; color: var(--text-dim); margin-bottom: 2px; font-family: var(--mono); }
+        .field input { width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--line); background: #080d1c; color: var(--text); font-family: var(--mono); font-size: 0.8rem; outline: none; }
+        .field input:focus { border-color: var(--neon); box-shadow: 0 0 0 2px var(--neon-dim); }
+
+        .hint-box { background: #0a1226; border-radius: 8px; padding: 10px 12px; border: 1px solid var(--line); margin-bottom: 10px; }
+        .hint-box .hint-header { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .hint-box .hint-header:hover { color: var(--text); }
+        .hint-box .hint-content { display: none; margin-top: 8px; font-size: 0.7rem; color: var(--text-dim); line-height: 1.8; border-top: 1px solid var(--line); padding-top: 8px; }
+        .hint-box .hint-content.show { display: block; }
+        .hint-box .hint-level { padding: 6px 10px; border-radius: 6px; margin-bottom: 6px; display: none; }
+        .hint-box .hint-level.show { display: block; }
+        .hint-box .hint-level.warn { background: #1a1a0a; border-left: 3px solid var(--warn); }
+        .hint-box .hint-level.danger { background: #1a0a0a; border-left: 3px solid var(--danger); }
+        .hint-box .hint-level.ok { background: #0a1a0f; border-left: 3px solid var(--ok); }
+        .hint-box .hint-level code { color: var(--warn); background: #1b1200; padding: 1px 4px; border-radius: 3px; }
+
+        .hint-row { font-size: 0.65rem; color: var(--text-dim); font-family: var(--mono); margin-top: 6px; }
+        .hint-row code { color: var(--warn); background: #1b1200; padding: 1px 4px; border-radius: 3px; }
+
+        .login-error { display: none; margin-top: 8px; padding: 6px 10px; border-radius: 6px; background: var(--danger-dim); border: 1px solid var(--danger); color: var(--danger); font-family: var(--mono); font-size: 0.7rem; }
+        .login-error.show { display: block; animation: shake .35s; }
+        @keyframes shake { 0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);} }
+
+        .console { background: #050912; border: 1px solid var(--line); border-radius: 8px; padding: 12px; font-family: var(--mono); font-size: 0.72rem; min-height: 340px; display: flex; flex-direction: column; gap: 4px; overflow-y: auto; max-height: 450px; }
+        .console .step { opacity: 0; transform: translateY(4px); animation: rise .3s forwards; padding: 4px 0; border-bottom: 1px solid #0a1226; }
+        @keyframes rise { to { opacity: 1; transform: translateY(0); } }
+        .console .muted { color: var(--text-dim); }
+        .console .q-normal { color: #9db4e0; }
+        .console .q-inject { color: var(--danger); font-weight: 700; }
+        .console .ok-line { color: var(--ok); }
+        .console .fail-line { color: var(--danger); }
+        .console .highlight { color: var(--warn); }
+        .console .arrow { color: var(--neon); }
+        .console .hint-auto { background: #1a1a0a; padding: 6px 10px; border-radius: 6px; border-left: 3px solid var(--warn); margin-top: 6px; font-size: 0.65rem; color: var(--text-dim); }
+        .console .hint-auto code { color: var(--warn); background: #1b1200; padding: 1px 4px; border-radius: 3px; }
+        .spinner { display: inline-block; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--neon); animation: spin .7s linear infinite; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .step-pause-btn { text-align: center; padding: 6px 0; }
+
+        .dashboard-view { display: none; margin-top: 12px; }
+        .dashboard-view.show { display: block; }
+        .dash-banner { display: flex; gap: 12px; align-items: flex-start; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+        .dash-icon { font-size: 1.6rem; line-height: 1; }
+        .dash-banner h3 { margin: 0 0 2px; color: var(--ok); font-size: 0.95rem; }
+        .dash-banner p { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+        .dash-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
+        @media(max-width:640px){ .dash-stats { grid-template-columns: 1fr; } }
+        .dash-card { background: #080d1c; border: 1px solid var(--line); border-radius: 8px; padding: 10px; text-align: center; }
+        .dash-num { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: var(--neon); }
+        .dash-num.danger-text { color: var(--danger); }
+        .dash-label { font-size: 0.6rem; color: var(--text-dim); font-family: var(--mono); }
+        .dummy-table { width: 100%; border-collapse: collapse; font-size: 0.65rem; }
+        .dummy-table th, .dummy-table td { border: 1px solid var(--line); padding: 3px 6px; text-align: left; }
+        .dummy-table th { color: var(--neon); }
+
+        .aspek-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        @media(max-width:640px){ .aspek-grid { grid-template-columns: 1fr; } }
+        .aspek-card { background: #080d1c; border-radius: 8px; padding: 10px 12px; border-left: 3px solid var(--neon); }
+        .aspek-card.danger { border-left-color: var(--danger); }
+        .aspek-card.warn { border-left-color: var(--warn); }
+        .aspek-card.ok { border-left-color: var(--ok); }
+        .aspek-card.purple { border-left-color: var(--neon-2); }
+        .aspek-card .label { font-size: 0.55rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.5px; }
+        .aspek-card .value { font-size: 0.78rem; color: var(--text); margin-top: 2px; }
+
+        /* ===== 3 SOAL ===== */
+        .quiz-section { display: none; margin-top: 16px; }
+        .quiz-section.show { display: block; }
+        .quiz-option { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 6px 10px; border-radius: 6px; background: #0a1226; border: 1px solid transparent; font-size: 0.78rem; transition: border-color .2s, background .2s; }
+        .quiz-option:hover { background: #111f33; }
+        .quiz-option.selected { background: #111f33; }
+        .quiz-option.correct { border-color: var(--ok); background: #0a1a0f; }
+        .quiz-option.wrong { border-color: var(--danger); background: #1a0a0a; }
+        .quiz-option input[type="radio"] { accent-color: var(--neon); width: 14px; height: 14px; cursor: pointer; }
+        .quiz-feedback { display: none; margin-top: 4px; font-size: 0.72rem; padding: 4px 8px; border-radius: 4px; }
+        .quiz-feedback.show { display: block; }
+        .quiz-feedback.ok { color: var(--ok); background: #0a1a0f; border-left: 2px solid var(--ok); }
+        .quiz-feedback.wrong { color: var(--danger); background: #1a0a0a; border-left: 2px solid var(--danger); }
+        .quiz-feedback.warn { color: var(--warn); background: #1a1a0a; border-left: 2px solid var(--warn); }
+        .quiz-result { display: none; margin-top: 8px; padding: 10px 14px; border-radius: 8px; font-size: 0.82rem; border: 1px solid var(--line); }
+        .quiz-result.show { display: block; }
+        .quiz-result.perfect { background: #0a1a0f; border-color: var(--ok); }
+        .quiz-result.good { background: #1a1a0a; border-color: var(--warn); }
+        .quiz-result.bad { background: #1a0a0a; border-color: var(--danger); }
+
+        .soal-hint-btn { background: none; border: 1px solid var(--line); color: var(--text-dim); border-radius: 4px; padding: 2px 10px; font-size: 0.6rem; cursor: pointer; font-family: var(--mono); transition: all .2s; }
+        .soal-hint-btn:hover { color: var(--text); border-color: #3a4d78; }
+        .soal-hint-text { display: none; font-size: 0.7rem; color: var(--text-dim); padding: 4px 8px; background: #0a1226; border-radius: 4px; margin-top: 4px; }
+        .soal-hint-text.show { display: block; }
+
+        .popup-overlay { position: fixed; inset: 0; background: #000a; backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; z-index: 100; padding: 16px; }
+        .popup-overlay.show { display: flex; }
+        .popup-card { background: var(--panel); border: 1px solid var(--neon); border-radius: 14px; padding: 24px 20px; max-width: 340px; text-align: center; box-shadow: 0 0 40px -10px var(--neon-dim), 0 20px 60px -20px #000; animation: pop .3s cubic-bezier(.2,1.4,.4,1); }
+        @keyframes pop { from { transform: scale(.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .popup-card .icon { font-size: 2rem; }
+        .popup-card h3 { margin: 4px 0; color: var(--neon); font-size: 0.95rem; }
+        .popup-card p { color: var(--text-dim); font-size: 0.82rem; margin: 0 0 8px; }
+        .popup-card .btn { margin: 0 auto; }
+
+        footer { padding: 16px 0 12px; text-align: center; color: var(--text-dim); font-size: 0.6rem; font-family: var(--mono); border-top: 1px solid var(--line); margin-top: 20px; }
+        .dot { color: var(--neon); }
+        @media(max-width:600px) { .navbar { flex-direction: column; align-items: stretch; gap: 4px; } .navlinks { justify-content: center; } }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="navbar">
+        <div class="brand"><img src="logo.jpg" alt="CyberLab">Cyber<span>Lab</span></div>
+        <div class="navlinks">
+            <a href="index.html">🏠 Beranda</a>
+            <a href="livemap.html">🌍 Live Map</a>
+            <a href="sqli.html" class="active">💀 SQLi</a>
+            <a href="malware.html">🐛 Malware</a>
+            <a href="utp.html">🔧 UTP</a>
+        </div>
+    </div>
+</nav>
+
+<div class="wrap">
+    <div class="page-title">
+        <h2>💀 <span>SQL Injection Simulator</span></h2>
+        <p>Form login <strong>tiruan</strong>. Coba login biasa — gagal. Lalu coba payload <code style="color:var(--warn);">' OR '1'='1</code> — berhasil! Setiap tahap bisa dianalisa.</p>
+    </div>
+
+    <div class="panel">
+        <div class="grid2">
+            <div class="login-box">
+                <h3>🔒 Login Admin</h3>
+                <div class="sub">Dashboard Sekolah Digital — v1.0 (rentan)</div>
+
+                <div class="hint-box">
+                    <div class="hint-header" onclick="toggleHint()">
+                        <span style="color:var(--warn);">💡</span>
+                        <span style="color:var(--text-dim);font-size:0.75rem;">Butuh bantuan? Klik untuk melihat petunjuk</span>
+                        <span id="hint-arrow" style="color:var(--text-dim);font-size:0.7rem;">▶</span>
+                    </div>
+                    <div class="hint-content" id="hint-content">
+                        <div class="hint-level warn" id="hint-level-1">
+                            <strong style="color:var(--warn);">🔍 Hint 1:</strong> Bagaimana membuat sistem menganggap kondisi login selalu benar?
+                        </div>
+                        <div class="hint-level danger" id="hint-level-2">
+                            <strong style="color:var(--danger);">🔍 Hint 2:</strong> Buat salah satu kondisi WHERE selalu bernilai benar dengan <code style="color:var(--warn);">OR '1'='1</code>
+                        </div>
+                        <div class="hint-level ok" id="hint-level-3">
+                            <strong style="color:var(--ok);">💡 Hint 3:</strong> Coba masukkan <code>' OR '1'='1</code> di kolom username.
+                        </div>
+                        <div style="font-size:0.6rem;color:var(--text-dim);margin-top:4px;border-top:1px solid var(--line);padding-top:4px;">
+                            💡 Hint muncul bertahap setelah kamu mencoba login dan gagal.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="field"><label>USERNAME</label><input id="sqli-user" type="text" placeholder="masukkan username" autocomplete="off"></div>
+                <div class="field"><label>PASSWORD</label><input id="sqli-pass" type="text" placeholder="masukkan password" autocomplete="off"></div>
+                <button class="btn" onclick="runSqli()">Login</button>
+                <div class="login-error" id="sqli-error"></div>
+                <div class="hint-row">Coba: <code>' OR '1'='1</code> atau <code>admin'--</code></div>
+            </div>
+            <div class="console" id="sqli-console"><div class="muted">// hasil proses akan tampil di sini</div></div>
+        </div>
+
+        <!-- DASHBOARD -->
+        <div class="dashboard-view" id="sqli-dashboard">
+            <div class="dash-banner">
+                <div class="dash-icon">🛡️</div>
+                <div><h3>Anda masuk ke Admin Dashboard</h3><p>Input tidak difilter → query <code>WHERE</code> selalu benar → login berhasil.</p></div>
+            </div>
+            <div class="dash-stats">
+                <div class="dash-card"><div class="dash-num">1,284</div><div class="dash-label">Total Siswa</div></div>
+                <div class="dash-card"><div class="dash-num">64</div><div class="dash-label">Total Guru</div></div>
+                <div class="dash-card"><div class="dash-num danger-text">BOCOR</div><div class="dash-label">Status Data</div></div>
+            </div>
+            <table class="dummy-table">
+                <tr><th>id</th><th>username</th><th>password</th><th>role</th></tr>
+                <tr><td>1</td><td>admin</td><td>••••••••</td><td>administrator</td></tr>
+                <tr><td>2</td><td>guru01</td><td>••••••••</td><td>staff</td></tr>
+                <tr><td>3</td><td>kepsek</td><td>••••••••</td><td>administrator</td></tr>
+            </table>
+            <button class="btn ghost" style="margin-top:10px;" onclick="resetSqli()">Keluar &amp; Coba Lagi</button>
+
+            <!-- ===== 3 SOAL LANGSUNG DI BAWAH DASHBOARD ===== -->
+            <div class="quiz-section show" id="sqli-quiz" style="margin-top:16px;">
+                <h4 style="margin:0 0 10px;color:var(--neon);font-size:0.9rem;">📝 Soal Pemahaman SQL Injection</h4>
+                <p style="color:var(--text-dim);font-size:0.78rem;margin-bottom:10px;">
+                    Jawab 3 soal di bawah ini untuk menguji pemahamanmu setelah praktik!
+                </p>
+
+                <!-- SOAL 1 -->
+                <div style="background:#080d1c;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid var(--line);">
+                    <p style="font-weight:600;font-size:0.84rem;margin:0 0 4px;">
+                        <span style="color:var(--neon);">Soal 1</span> — Kenapa kamu bisa login tanpa password?
+                    </p>
+                    <p style="color:var(--text-dim);font-size:0.7rem;margin:0 0 6px;">
+                        Kamu berhasil login padahal password salah. Kenapa ini bisa terjadi?
+                    </p>
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                        <button class="soal-hint-btn" onclick="toggleSoalHint('q1-hint')">💡 Hint</button>
+                        <span class="soal-hint-text" id="q1-hint">Petunjuk: Perhatikan bagaimana input <code style="color:var(--warn);">' OR '1'='1</code> mengubah logika query.</span>
+                    </div>
+                    <div class="quiz-option" onclick="selectAnswer('q1','a')"><input type="radio" name="q1" value="a"> A. Websitenya error</div>
+                    <div class="quiz-option" onclick="selectAnswer('q1','b')"><input type="radio" name="q1" value="b"> B. Input <code style="color:var(--warn);">' OR '1'='1</code> bikin <code style="color:var(--ok);">'1'='1'</code> selalu BENAR</div>
+                    <div class="quiz-option" onclick="selectAnswer('q1','c')"><input type="radio" name="q1" value="c"> C. Admin udah ada di database</div>
+                    <div class="quiz-option" onclick="selectAnswer('q1','d')"><input type="radio" name="q1" value="d"> D. Sistem ngasih akses ke semua</div>
+                    <div class="quiz-feedback" id="q1-feedback"></div>
+                </div>
+
+                <!-- SOAL 2 -->
+                <div style="background:#080d1c;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid var(--line);">
+                    <p style="font-weight:600;font-size:0.84rem;margin:0 0 4px;">
+                        <span style="color:var(--neon);">Soal 2</span> — Apa bedanya query normal vs payload?
+                    </p>
+                    <p style="color:var(--text-dim);font-size:0.7rem;margin:0 0 6px;">
+                        Bandingkan kedua query di bawah ini!
+                    </p>
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                        <button class="soal-hint-btn" onclick="toggleSoalHint('q2-hint')">💡 Hint</button>
+                        <span class="soal-hint-text" id="q2-hint">Petunjuk: Bandingkan kondisi WHERE pada kedua query — apa yang membuat query payload selalu benar?</span>
+                    </div>
+                    <div style="font-size:0.65rem;color:var(--text-dim);background:#0a1226;padding:4px 8px;border-radius:4px;margin-bottom:6px;">
+                        Normal: <code style="color:#9db4e0;">SELECT * FROM users WHERE username='admin' AND password='12345'</code><br>
+                        Payload: <code style="color:var(--danger);">SELECT * FROM users WHERE username='admin' OR '1'='1' AND password='12345'</code>
+                    </div>
+                    <div class="quiz-option" onclick="selectAnswer('q2','a')"><input type="radio" name="q2" value="a"> A. Query normal lebih cepat</div>
+                    <div class="quiz-option" onclick="selectAnswer('q2','b')"><input type="radio" name="q2" value="b"> B. Query normal butuh password bener, payload bisa lolos</div>
+                    <div class="quiz-option" onclick="selectAnswer('q2','c')"><input type="radio" name="q2" value="c"> C. Pake database beda</div>
+                    <div class="quiz-option" onclick="selectAnswer('q2','d')"><input type="radio" name="q2" value="d"> D. Query normal cuma nyari admin</div>
+                    <div class="quiz-feedback" id="q2-feedback"></div>
+                </div>
+
+                <!-- SOAL 3 -->
+                <div style="background:#080d1c;border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid var(--line);">
+                    <p style="font-weight:600;font-size:0.84rem;margin:0 0 4px;">
+                        <span style="color:var(--neon);">Soal 3</span> — Cara paling ampuh cegah SQL Injection?
+                    </p>
+                    <p style="color:var(--text-dim);font-size:0.7rem;margin:0 0 6px;">
+                        Dari yang udah kamu pelajari, mana cara pencegahan yang PALING TEPAT?
+                    </p>
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                        <button class="soal-hint-btn" onclick="toggleSoalHint('q3-hint')">💡 Hint</button>
+                        <span class="soal-hint-text" id="q3-hint">Petunjuk: Cara paling ampuh adalah yang membuat <strong>input dianggap DATA, bukan PERINTAH SQL</strong>.</span>
+                    </div>
+                    <div class="quiz-option" onclick="selectAnswer('q3','a')"><input type="radio" name="q3" value="a"> A. Bikin password panjang</div>
+                    <div class="quiz-option" onclick="selectAnswer('q3','b')"><input type="radio" name="q3" value="b"> B. <strong style="color:var(--ok);">Parameterized Queries</strong> — input dianggap DATA</div>
+                    <div class="quiz-option" onclick="selectAnswer('q3','c')"><input type="radio" name="q3" value="c"> C. Ganti nama tabel</div>
+                    <div class="quiz-option" onclick="selectAnswer('q3','d')"><input type="radio" name="q3" value="d"> D. Batasi jumlah user</div>
+                    <div class="quiz-feedback" id="q3-feedback"></div>
+                </div>
+
+                <button class="btn" style="font-size:0.75rem;padding:6px 14px;margin-top:4px;" onclick="checkQuiz()">✅ Periksa Jawaban</button>
+                <div class="quiz-result" id="quiz-result"></div>
+            </div>
+            <!-- AKHIR 3 SOAL -->
+
+        </div>
+        <!-- AKHIR DASHBOARD -->
+
+        <!-- 5 ASPEK (Muncul di bawah soal) -->
+        <div class="panel" id="sqli-aspek" style="display:none; margin-top:0;">
+            <h4 style="margin:0 0 10px;color:var(--neon);font-size:0.9rem;">📊 Analisis SQL Injection</h4>
+            <div class="aspek-grid">
+                <div class="aspek-card danger"><div class="label">Cara Masuk</div><div class="value">Menyisipkan query SQL ke input yang tidak divalidasi</div></div>
+                <div class="aspek-card warn"><div class="label">Cara Menyebar</div><div class="value">Tidak menyebar sendiri — butuh eksekusi query</div></div>
+                <div class="aspek-card danger"><div class="label">Dampak Utama</div><div class="value">Bypass login, pencurian data, modifikasi database</div></div>
+                <div class="aspek-card ok"><div class="label">Cara Deteksi</div><div class="value">Pantau log, WAF, penetration testing</div></div>
+                <div class="aspek-card purple" style="grid-column:1/-1;"><div class="label">🛡️ Pencegahan</div><div class="value">Parameterized Queries, validasi input, batasi hak akses, WAF</div></div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer>
+        <span class="dot">•</span> CyberLab — seluruh data serangan bersifat tiruan
+    </footer>
+</div>
+
+<!-- ===== POPUP ===== -->
+<div class="popup-overlay" id="sqli-popup">
+    <div class="popup-card">
+        <div class="icon">🎉</div>
+        <h3>SELAMAT!</h3>
+        <p>Kamu berhasil masuk sebagai <strong>ADMIN</strong>!</p>
+        <p style="font-size:0.78rem;color:var(--warn);">💡 "Gunakan ilmu ini untuk MELINDUNGI, bukan MENYERANG."</p>
+        <button class="btn ok" onclick="closeSqliPopup()" style="font-size:0.75rem;padding:6px 14px;">Saya Mengerti</button>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// HINT FUNCTIONS
+// ============================================================
+function toggleHint() {
+    const content = document.getElementById('hint-content');
+    const arrow = document.getElementById('hint-arrow');
+    if (content) {
+        content.classList.toggle('show');
+        arrow.textContent = content.classList.contains('show') ? '▼' : '▶';
+    }
+}
+
+function toggleSoalHint(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('show');
+}
+
+// ============================================================
+// SQL INJECTION
+// ============================================================
+const injectionPattern = /(\'|--|#|\bor\b\s*['\"]?1['\"]?\s*=\s*['\"]?1['\"]?|\bor\b\s+true)/i;
+let sqlData = {};
+let failedAttempts = 0;
+let hintUnlocked = { level1: false, level2: false, level3: false };
+
+function runSqli() {
+    const user = document.getElementById('sqli-user').value;
+    const pass = document.getElementById('sqli-pass').value;
+    const box = document.getElementById('sqli-console');
+    const errBox = document.getElementById('sqli-error');
+    
+    if (box) box.innerHTML = '';
+    if (errBox) {
+        errBox.classList.remove('show');
+        errBox.textContent = '';
+    }
+
+    if (!user && !pass) {
+        if (errBox) {
+            errBox.textContent = '✖ Masukkan username dan password dulu ya!';
+            errBox.classList.add('show');
+        }
+        return;
+    }
+
+    const isInjection = injectionPattern.test(user) || injectionPattern.test(pass);
+    const rawQuery = `SELECT * FROM users WHERE username='${user}' AND password='${pass}'`;
+    sqlData = { user, pass, isInjection, rawQuery, escapedQuery: rawQuery.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])) };
+
+    if (isInjection) {
+        failedAttempts = 0;
+    }
+
+    showStep1();
+}
+
+function showHintLevel(level) {
+    const el = document.getElementById('hint-level-' + level);
+    if (el) el.classList.add('show');
+}
+
+function unlockNextHint() {
+    if (!hintUnlocked.level1) { hintUnlocked.level1 = true; showHintLevel(1); return; }
+    if (!hintUnlocked.level2) { hintUnlocked.level2 = true; showHintLevel(2); return; }
+    if (!hintUnlocked.level3) { hintUnlocked.level3 = true; showHintLevel(3); return; }
+}
+
+function addStep(container, html, delay, callback) {
+    if (!container) return;
+    setTimeout(() => {
+        const div = document.createElement('div');
+        div.className = 'step';
+        div.innerHTML = html;
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+        if (callback) callback();
+    }, delay);
+}
+
+function addPause(container, buttonText, callback) {
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'step-pause-btn';
+    div.innerHTML = `<button class="btn" style="font-size:0.7rem;padding:4px 14px;" onclick="continueStep('${buttonText}', ${callback ? 'true' : 'false'})">▶️ ${buttonText}</button>`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    if (callback) div._callback = callback;
+    return div;
+}
+
+function continueStep(buttonText, hasCallback) {
+    const container = document.getElementById('sqli-console');
+    if (!container) return;
+    const btn = container.querySelector('.step-pause-btn');
+    if (btn) { const cb = btn._callback; btn.remove(); if (hasCallback && cb) cb(); }
+}
+
+function showStep1() {
+    const box = document.getElementById('sqli-console');
+    if (!box) return;
+    const data = sqlData;
+    addStep(box, `
+        <div><span class="muted">📤 <span class="arrow">[1]</span> Mengirim data input ke server...</span></div>
+        <div style="padding-left:16px;">
+            <div class="muted">📦 username = <span style="color:var(--text);">'${data.user}'</span></div>
+            <div class="muted">📦 password = <span style="color:var(--text);">'${data.pass}'</span></div>
+        </div>
+        <div class="ok-line">✅ Data berhasil dikirim</div>
+        <div style="margin-top:6px;padding:6px 10px;background:#0a1226;border-radius:6px;border-left:2px solid var(--warn);font-size:0.7rem;color:var(--text-dim);">
+            <strong style="color:var(--warn);">📖 Analisa:</strong> Data dari form dikirim ke server.
+        </div>
+    `, 0, () => { addPause(box, 'Lanjut ke Tahap 2', showStep2); });
+}
+
+function showStep2() {
+    const box = document.getElementById('sqli-console');
+    if (!box) return;
+    const data = sqlData;
+    const isInj = data.isInjection;
+    addStep(box, `
+        <div><span class="muted">🔧 <span class="arrow">[2]</span> Server membangun query SQL...</span></div>
+        <div style="padding-left:16px;">
+            <div class="${isInj ? 'q-inject' : 'q-normal'}">📝 ${data.escapedQuery}</div>
+            ${isInj ? `
+                <div class="q-inject" style="margin-top:4px;">⚠️ Ada pola berbahaya! <span class="highlight">'</span> dan <span class="highlight">OR</span> ketahuan</div>
+                <div class="q-inject">💀 Query bakal selalu <span class="highlight">BENAR</span> soalnya '1'='1'</div>
+            ` : `<div class="q-normal" style="margin-top:4px;">✅ Query normal, aman</div>`}
+        </div>
+        <div style="margin-top:6px;padding:6px 10px;background:#0a1226;border-radius:6px;border-left:2px solid var(--warn);font-size:0.7rem;color:var(--text-dim);">
+            <strong style="color:var(--warn);">📖 Analisa:</strong>
+            ${isInj ? `Server gabungin input ke query tanpa dicek. Input <strong style="color:var(--danger);">' OR '1'='1</strong> ngubah logika query.` : `Input normal gak ada karakter aneh yang bisa ngubah logika query.`}
+        </div>
+    `, 0, () => { addPause(box, 'Lanjut ke Tahap 3', showStep3); });
+}
+
+function showStep3() {
+    const box = document.getElementById('sqli-console');
+    if (!box) return;
+    addStep(box, `
+        <div><span class="muted">📡 <span class="arrow">[3]</span> Kirim query ke database...</span></div>
+        <div style="padding-left:16px;">
+            <div class="muted"><span class="spinner"></span> Database lagi ngolah query...</div>
+            <div class="muted">🔍 Nyari data di tabel <span style="color:var(--ok);">users</span>...</div>
+        </div>
+        <div style="margin-top:6px;padding:6px 10px;background:#0a1226;border-radius:6px;border-left:2px solid var(--warn);font-size:0.7rem;color:var(--text-dim);">
+            <strong style="color:var(--warn);">📖 Analisa:</strong> Database bakal nyari data yang cocok sama kondisi WHERE.
+        </div>
+    `, 0, () => { addPause(box, 'Lanjut ke Tahap 4', showStep4); });
+}
+
+function showStep4() {
+    const box = document.getElementById('sqli-console');
+    if (!box) return;
+    const data = sqlData;
+    const isInj = data.isInjection;
+    if (isInj) {
+        failedAttempts = 0;
+        addStep(box, `
+            <div><span class="ok-line">✅ <span class="arrow">[4]</span> Query berhasil dijalanin!</span></div>
+            <div style="padding-left:16px;">
+                <div class="ok-line">🔓 Kondisi <span class="highlight">'1'='1'</span> selalu bener → semua data kepilih</div>
+                <div class="ok-line">👤 Data user ditemukan: <span style="color:var(--text);">admin</span></div>
+                <div style="margin-top:6px;background:#0a1226;border-radius:6px;padding:6px;border:1px solid var(--line);">
+                    <div style="font-size:0.6rem;color:var(--text-dim);">📊 Hasil Query:</div>
+                    <table style="width:100%;border-collapse:collapse;font-size:0.6rem;margin-top:2px;">
+                        <tr style="color:var(--neon);"><th style="text-align:left;padding:2px 4px;border:1px solid var(--line);">id</th><th style="text-align:left;padding:2px 4px;border:1px solid var(--line);">username</th><th style="text-align:left;padding:2px 4px;border:1px solid var(--line);">role</th></tr>
+                        <tr><td style="padding:2px 4px;border:1px solid var(--line);">1</td><td style="padding:2px 4px;border:1px solid var(--line);"><span style="color:var(--ok);">admin</span></td><td style="padding:2px 4px;border:1px solid var(--line);">administrator</td></tr>
+                        <tr><td style="padding:2px 4px;border:1px solid var(--line);">2</td><td style="padding:2px 4px;border:1px solid var(--line);">guru01</td><td style="padding:2px 4px;border:1px solid var(--line);">staff</td></tr>
+                        <tr><td style="padding:2px 4px;border:1px solid var(--line);">3</td><td style="padding:2px 4px;border:1px solid var(--line);">kepsek</td><td style="padding:2px 4px;border:1px solid var(--line);">administrator</td></tr>
+                    </table>
+                </div>
+            </div>
+            <div style="margin-top:6px;padding:6px 10px;background:#0a1226;border-radius:6px;border-left:2px solid var(--danger);font-size:0.7rem;color:var(--text-dim);">
+                <strong style="color:var(--danger);">💀 Analisa:</strong> Soalnya <strong style="color:var(--ok);">'1'='1'</strong> selalu bener, database ngembaliin SEMUA data.
+            </div>
+        `, 0, () => { addPause(box, 'Lanjut ke Tahap 5', showStep5Success); });
+    } else {
+        failedAttempts++;
+        let hintAuto = '';
+        let hintMessage = '';
+        if (failedAttempts === 1) hintMessage = 'Coba pikirkan: "Bagaimana cara membuat sistem menganggap kondisi login selalu benar?"';
+        else if (failedAttempts === 2) hintMessage = 'Coba buat salah satu kondisi WHERE selalu bernilai benar dengan <code style="color:var(--warn);">OR \'1\'=\'1</code>';
+        else if (failedAttempts >= 3) hintMessage = 'Coba masukkan <code style="color:var(--warn);">\' OR \'1\'=\'1</code> di kolom username.';
+        
+        unlockNextHint();
+        
+        if (failedAttempts >= 2) {
+            hintAuto = `
+                <div class="hint-auto">
+                    💡 <span style="color:var(--warn);">Hint (Percobaan ke-${failedAttempts}):</span><br>
+                    ${hintMessage}
+                    <br><small style="color:var(--text-dim);">(Klik "Butuh bantuan?" di atas form)</small>
+                </div>
+            `;
+        }
+        
+        addStep(box, `
+            <div><span class="fail-line">❌ <span class="arrow">[4]</span> Query dijalanin, tapi gak ada data yang cocok</span></div>
+            <div style="padding-left:16px;">
+                <div class="fail-line">🔍 Username '${data.user}' gak ketemu di database</div>
+                <div class="fail-line">❌ Kondisi WHERE gak kepenuhi → 0 data</div>
+                <div style="margin-top:6px;background:#0a1226;border-radius:6px;padding:6px;border:1px solid var(--line);text-align:center;color:var(--danger);font-size:0.7rem;">⚠️ GAK ADA DATA YANG COCOK<br><span style="font-size:0.55rem;color:var(--text-dim);">(0 baris dikembalikan)</span></div>
+            </div>
+            <div style="margin-top:6px;padding:6px 10px;background:#0a1226;border-radius:6px;border-left:2px solid var(--ok);font-size:0.7rem;color:var(--text-dim);">
+                <strong style="color:var(--ok);">📖 Analisa:</strong> Gak ada username yang SAMA PERSIS → <strong style="color:var(--danger);">LOGIN GAGAL</strong>.
+            </div>
+            ${hintAuto}
+        `, 0, () => { addPause(box, 'Lanjut ke Tahap 5', showStep5Fail); });
+    }
+}
+
+function showStep5Success() {
+    showStep5(() => {
+        const box = document.getElementById('sqli-console');
+        if (!box) return;
+        addStep(box, `
+            <div style="padding:10px;background:#0a1a0f;border:1px solid var(--ok);border-radius:8px;">
+                <div><span class="ok-line">✅ <span class="arrow">[6]</span> <span style="font-size:1rem;color:var(--ok);font-weight:700;">LOGIN BERHASIL!</span></span></div>
+                <div style="padding-left:16px;">
+                    <div class="ok-line">🎉 Akses dikasih ke dashboard admin</div>
+                    <div class="ok-line">👤 Selamat datang, <strong style="color:var(--ok);">Admin</strong>!</div>
+                </div>
+                <button class="btn ok" style="margin-top:6px;font-size:0.7rem;padding:6px 14px;" onclick="goToAdminDashboard()">🚀 Masuk ke Dashboard</button>
+            </div>
+        `, 0);
+    });
+}
+
+function showStep5Fail() {
+    showStep5(() => {
+        const box = document.getElementById('sqli-console');
+        if (!box) return;
+        addStep(box, `
+            <div style="padding:10px;background:#1a0a0a;border:1px solid var(--danger);border-radius:8px;">
+                <div><span class="fail-line">❌ <span class="arrow">[6]</span> <span style="font-size:1rem;color:var(--danger);font-weight:700;">LOGIN GAGAL!</span></span></div>
+                <div style="padding-left:16px;">
+                    <div class="fail-line">🔒 Akses ditolak</div>
+                    <div class="fail-line">👤 Username atau password salah</div>
+                </div>
+                <button class="btn ghost" style="margin-top:6px;font-size:0.7rem;padding:6px 14px;" onclick="resetSqli()">🔄 Coba Lagi</button>
+            </div>
+        `, 0);
+    });
+}
+
+function showStep5(callback) {
+    const box = document.getElementById('sqli-console');
+    if (!box) return;
+    addStep(box, `
+        <div><span class="muted">📤 <span class="arrow">[5]</span> Kirim hasil ke server...</span></div>
+        <div style="padding-left:16px;">
+            <div class="muted">📦 Kirim data hasil query ke server</div>
+            <div class="muted">🔄 Server ngolah hasil dan nentuin akses</div>
+        </div>
+        <div style="margin-top:6px;padding:6px 10px;background:#0a1226;border-radius:6px;border-left:2px solid var(--warn);font-size:0.7rem;color:var(--text-dim);">
+            <strong style="color:var(--warn);">📖 Analisa:</strong> Kalo ada data yang cocok → server ngasih akses. Kalo gak ada → nolak.
+        </div>
+    `, 0, () => { addPause(box, '✅ Lihat Hasil Akhir', callback); });
+}
+
+// ============================================================
+// 3 SOAL MUNCUL LANGSUNG DI BAWAH DASHBOARD (DENGAN PENGECEKAN NULL)
+// ============================================================
+function goToAdminDashboard() {
+    // Sembunyikan form login
+    const grid = document.querySelector('#sqli .grid2');
+    if (grid) grid.style.display = 'none';
+    
+    // Tampilkan dashboard
+    const dashboard = document.getElementById('sqli-dashboard');
+    if (dashboard) dashboard.classList.add('show');
+    
+    // Tampilkan 5 aspek
+    const aspek = document.getElementById('sqli-aspek');
+    if (aspek) aspek.style.display = 'block';
+    
+    // Tampilkan popup
+    const popup = document.getElementById('sqli-popup');
+    if (popup) popup.classList.add('show');
+}
+
+function closeSqliPopup() { 
+    const popup = document.getElementById('sqli-popup');
+    if (popup) popup.classList.remove('show'); 
+}
+
+function resetSqli() {
+    const dashboard = document.getElementById('sqli-dashboard');
+    if (dashboard) dashboard.classList.remove('show');
+    
+    const aspek = document.getElementById('sqli-aspek');
+    if (aspek) aspek.style.display = 'none';
+    
+    const grid = document.querySelector('#sqli .grid2');
+    if (grid) grid.style.display = '';
+    
+    const userInput = document.getElementById('sqli-user');
+    if (userInput) userInput.value = '';
+    
+    const passInput = document.getElementById('sqli-pass');
+    if (passInput) passInput.value = '';
+    
+    const errBox = document.getElementById('sqli-error');
+    if (errBox) {
+        errBox.classList.remove('show');
+        errBox.textContent = '';
+    }
+    
+    const consoleBox = document.getElementById('sqli-console');
+    if (consoleBox) consoleBox.innerHTML = '<div class="muted">// hasil proses akan tampil di sini</div>';
+    
+    failedAttempts = 0;
+    
+    // Reset quiz
+    quizAnswers = { q1: null, q2: null, q3: null };
+    for (let i = 1; i <= 3; i++) {
+        const fb = document.getElementById('q' + i + '-feedback');
+        if (fb) fb.className = 'quiz-feedback';
+        document.querySelectorAll(`input[name="q${i}"]`).forEach(o => { o.checked = false; const parent = o.closest('.quiz-option'); if (parent) parent.className = 'quiz-option'; });
+    }
+    const result = document.getElementById('quiz-result');
+    if (result) result.className = 'quiz-result';
+    
+    document.querySelectorAll('.soal-hint-text').forEach(el => el.classList.remove('show'));
+}
+
+// ============================================================
+// 3 SOAL - LOGIKA JAWABAN
+// ============================================================
+let quizAnswers = { q1: null, q2: null, q3: null };
+
+function selectAnswer(question, value) {
+    quizAnswers[question] = value;
+    document.querySelectorAll(`input[name="${question}"]`).forEach(o => {
+        const p = o.closest('.quiz-option');
+        if (p) {
+            o.checked = (o.value === value);
+            p.classList.toggle('selected', o.checked);
+        }
+    });
+    const fb = document.getElementById(question + '-feedback');
+    if (fb) fb.className = 'quiz-feedback';
+}
+
+function checkQuiz() {
+    const correct = { q1: 'b', q2: 'b', q3: 'b' };
+    const expl = {
+        q1: 'Input <code style="color:var(--warn);">\' OR \'1\'=\'1</code> bikin <code style="color:var(--ok);">\'1\'=\'1\'</code> selalu BENAR.',
+        q2: 'Query payload bisa lolos tanpa password soalnya <code style="color:var(--ok);">\'1\'=\'1\'</code> selalu BENAR.',
+        q3: '<strong style="color:var(--ok);">Parameterized Queries</strong> adalah cara paling ampuh.'
+    };
+    let score = 0;
+    for (let i = 1; i <= 3; i++) {
+        const q = 'q' + i, sel = quizAnswers[q], fb = document.getElementById(q + '-feedback');
+        document.querySelectorAll(`input[name="${q}"]`).forEach(o => { const p = o.closest('.quiz-option'); if (p) p.classList.remove('correct', 'wrong'); });
+        if (!sel) { if (fb) { fb.innerHTML = '⚠️ Belum dijawab!'; fb.className = 'quiz-feedback show warn'; } continue; }
+        const isCorrect = sel === correct[q];
+        if (isCorrect) { score++; if (fb) { fb.innerHTML = '✅ Benar! ' + expl[q]; fb.className = 'quiz-feedback show ok'; } } else { if (fb) { fb.innerHTML = '❌ Kurang tepat. ' + expl[q]; fb.className = 'quiz-feedback show wrong'; } }
+        document.querySelectorAll(`input[name="${q}"]`).forEach(o => { const p = o.closest('.quiz-option'); if (p) { if (o.value === correct[q]) p.classList.add('correct'); if (o.value === sel && !isCorrect) p.classList.add('wrong'); } });
+    }
+    const r = document.getElementById('quiz-result');
+    if (r) {
+        r.className = 'quiz-result show' + (score === 3 ? ' perfect' : score >= 2 ? ' good' : ' bad');
+        r.innerHTML = score === 3 ? `🎉 <strong style="color:var(--ok);">SEMPURNA! ${score}/3</strong><br><span style="color:var(--text-dim);font-size:0.75rem;">Kamu udah paham banget tentang SQL Injection!<br><strong style="color:var(--warn);">"Gunakan ilmu ini untuk MELINDUNGI, bukan MENYERANG."</strong></span>` :
+                     score >= 2 ? `👍 <strong style="color:var(--warn);">${score}/3 — Lumayan!</strong><br><span style="color:var(--text-dim);font-size:0.75rem;">Coba baca lagi analisanya ya!</span>` :
+                     `💪 <strong style="color:var(--danger);">${score}/3 — Perlu belajar lagi!</strong><br><span style="color:var(--text-dim);font-size:0.75rem;">Yuk baca ulang analisa di console!</span>`;
+    }
+}
+</script>
+</body>
+</html>
