@@ -83,7 +83,6 @@
         .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px -6px var(--neon); }
         .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
 
-        /* ===== REFERENSI DENGAN GAMBAR ===== */
         .utp-ref-content { 
             background: #080d1c; 
             border-radius: 8px; 
@@ -208,7 +207,7 @@
         </div>
         <div class="utp-ref-content" id="utp-ref-content">
             <span class="ref-title" id="ref-title">📘 Referensi Urutan Warna — STRAIGHT (T568B)</span>
-            <img id="ref-image" class="ref-image" src="straight.jpg" alt="Referensi Urutan Warna Kabel UTP Straight" style="max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);">
+            <img id="ref-image" class="ref-image" src="straight.jpg" alt="Referensi Urutan Warna Kabel UTP Straight">
             <div class="ref-desc" id="ref-desc">✅ Kedua ujung sama → <strong class="ok">STRAIGHT</strong> (T568B - T568B)</div>
         </div>
     </div>
@@ -217,8 +216,14 @@
     <div class="panel">
         <h3 style="font-size:0.9rem;margin:0 0 4px;">🎬 Video Tutorial</h3>
         <div class="video-grid">
-            <div><div class="video-label">Straight-Through</div><div id="video-block-straight"><div class="video-placeholder"><div class="vp-icon">🎥</div><h4>Video belum dipasang</h4><p>Tempel link YouTube di <code style="color:var(--warn);">crimpingVideos</code></p></div></div></div>
-            <div><div class="video-label">Crossover</div><div id="video-block-crossover"><div class="video-placeholder"><div class="vp-icon">🎥</div><h4>Video belum dipasang</h4><p>Tempel link YouTube di <code style="color:var(--warn);">crimpingVideos</code></p></div></div></div>
+            <div>
+                <div class="video-label">Straight-Through</div>
+                <div id="video-block-straight"></div>
+            </div>
+            <div>
+                <div class="video-label">Crossover</div>
+                <div id="video-block-crossover"></div>
+            </div>
         </div>
     </div>
 
@@ -249,7 +254,7 @@
 
 <script>
 // ============================================================
-// UTP PRACTICE - DENGAN GAMBAR LOKAL (straight.jpg & cros.jpg)
+// UTP PRACTICE - DENGAN GAMBAR LOKAL
 // ============================================================
 
 // Data warna kabel
@@ -392,20 +397,30 @@ function resetUtp() {
     if (impact) impact.classList.remove('show');
 }
 
-// ===== VIDEO TUTORIAL =====
+// ============================================================
+// VIDEO TUTORIAL - DENGAN LINK YOUTUBE
+// ============================================================
 const crimpingVideos = [
-    { link: "", target: "video-block-straight", title: "Video Tutorial Crimping Straight-Through" },
-    { link: "", target: "video-block-crossover", title: "Video Tutorial Crimping Crossover" }
+    { link: "https://youtu.be/6NAqAhLnvpk", target: "video-block-straight", title: "Video Tutorial Crimping Straight-Through" },
+    { link: "https://youtu.be/33yWj-Zm7e0", target: "video-block-crossover", title: "Video Tutorial Crimping Crossover" }
 ];
 
 function extractYoutubeId(link) {
     if (!link) return null;
     link = link.trim();
+    // Cek apakah sudah berupa ID video (11 karakter)
     if (/^[a-zA-Z0-9_-]{11}$/.test(link)) return link;
     try {
         const url = new URL(link);
-        if (url.hostname.includes('youtu.be')) return url.pathname.slice(1);
-        if (url.searchParams.get('v')) return url.searchParams.get('v');
+        // youtu.be/xxxxxxx
+        if (url.hostname.includes('youtu.be')) {
+            return url.pathname.slice(1);
+        }
+        // youtube.com/watch?v=xxxxxxx
+        if (url.searchParams.get('v')) {
+            return url.searchParams.get('v');
+        }
+        // youtube.com/embed/xxxxxxx
         const embedMatch = url.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
         if (embedMatch) return embedMatch[1];
     } catch (e) {}
