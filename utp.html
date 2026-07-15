@@ -83,8 +83,36 @@
         .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px -6px var(--neon); }
         .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--text); }
 
-        .utp-ref-content { background: #080d1c; border-radius: 8px; padding: 12px; border: 1px solid var(--line); }
-        .utp-ref-content .warna { font-family: var(--mono); font-size: 0.8rem; color: var(--text); }
+        /* ===== REFERENSI DENGAN GAMBAR ===== */
+        .utp-ref-content { 
+            background: #080d1c; 
+            border-radius: 8px; 
+            padding: 12px; 
+            border: 1px solid var(--line); 
+            text-align: center;
+        }
+        .utp-ref-content .ref-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin-top: 8px;
+            border: 1px solid var(--line);
+            background: #0a1226;
+        }
+        .utp-ref-content .ref-title {
+            font-size: 0.85rem;
+            color: var(--neon);
+            font-weight: 700;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .utp-ref-content .ref-desc {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            margin-top: 6px;
+        }
+        .utp-ref-content .ref-desc strong.ok { color: var(--ok); }
+        .utp-ref-content .ref-desc strong.cross { color: var(--neon-2); }
 
         .utp-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         @media(max-width:760px){ .utp-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -113,49 +141,6 @@
             color: var(--text);
             font-family: var(--mono);
             font-size: 0.65rem;
-        }
-        /* ===== WARNA KABEL ===== */
-        .color-dot {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            border: 1px solid #3a4d78;
-            margin-right: 6px;
-            vertical-align: middle;
-            flex-shrink: 0;
-        }
-        .color-option {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .warna-display {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            padding: 4px 0;
-        }
-        .warna-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: var(--mono);
-            font-size: 0.72rem;
-            color: var(--text-dim);
-            padding: 2px 0;
-        }
-        .warna-row .dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 1px solid #3a4d78;
-            flex-shrink: 0;
-        }
-        .warna-row .pin-label {
-            color: var(--text);
-            font-weight: 600;
-            width: 30px;
         }
 
         .pin-fb { font-size: 0.6rem; margin-top: 4px; font-family: var(--mono); }
@@ -199,7 +184,7 @@
 <div class="wrap">
     <div class="page-title">
         <h2>🔧 <span>Praktik Crimping UTP</span></h2>
-        <p>Pilih jenis kabel (Straight/Crossover), pelajari urutan warna dengan <strong>warna asli</strong>, lalu verifikasi susunanmu.</p>
+        <p>Pilih jenis kabel (Straight/Crossover), lihat gambar referensi urutan warna, lalu verifikasi susunanmu.</p>
     </div>
 
     <!-- PANDUAN 6 LANGKAH -->
@@ -207,7 +192,7 @@
         <h3 style="font-size:0.9rem;margin:0 0 4px;">🔧 6 Langkah Crimping</h3>
         <ol style="color:var(--text-dim);font-size:0.78rem;line-height:1.8;padding-left:18px;margin:0;">
             <li><strong style="color:var(--text);">Kupas</strong> kulit luar kabel ±2 cm</li>
-            <li><strong style="color:var(--text);">Urutkan</strong> warna sesuai standar (lihat referensi di bawah)</li>
+            <li><strong style="color:var(--text);">Urutkan</strong> warna sesuai standar (lihat gambar referensi di bawah)</li>
             <li><strong style="color:var(--text);">Potong rata</strong> ujung kabel</li>
             <li><strong style="color:var(--text);">Masukkan</strong> ke konektor RJ45</li>
             <li><strong style="color:var(--text);">Crimping</strong> dengan tang (tekan kuat)</li>
@@ -215,17 +200,16 @@
         </ol>
     </div>
 
-    <!-- PILIH JENIS KABEL + REFERENSI DENGAN WARNA -->
+    <!-- PILIH JENIS KABEL + REFERENSI GAMBAR -->
     <div class="panel">
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
             <button class="btn" id="utp-straight-btn" style="font-size:0.75rem;padding:6px 14px;background:linear-gradient(135deg,var(--neon),#0ea5e9);color:#00121f;" onclick="setUtpType('straight')">📘 Straight (T568B)</button>
             <button class="btn ghost" id="utp-crossover-btn" style="font-size:0.75rem;padding:6px 14px;" onclick="setUtpType('crossover')">📙 Crossover</button>
         </div>
         <div class="utp-ref-content" id="utp-ref-content">
-            <strong style="color:var(--neon);">Referensi Urutan Warna — STRAIGHT (T568B):</strong>
-            <div class="warna-display" id="warna-display">
-                <!-- Diisi oleh JavaScript -->
-            </div>
+            <span class="ref-title" id="ref-title">📘 Referensi Urutan Warna — STRAIGHT (T568B)</span>
+            <img id="ref-image" class="ref-image" src="straight.jpg" alt="Referensi Urutan Warna Kabel UTP Straight" style="max-width:100%;height:auto;border-radius:8px;border:1px solid var(--line);">
+            <div class="ref-desc" id="ref-desc">✅ Kedua ujung sama → <strong class="ok">STRAIGHT</strong> (T568B - T568B)</div>
         </div>
     </div>
 
@@ -238,7 +222,7 @@
         </div>
     </div>
 
-    <!-- VERIFIKASI 8 PIN DENGAN WARNA -->
+    <!-- VERIFIKASI 8 PIN -->
     <div class="panel">
         <h3 style="font-size:0.9rem;margin:0 0 8px;">✅ Verifikasi Susunan</h3>
         <div class="utp-grid" id="utp-grid"></div>
@@ -265,10 +249,10 @@
 
 <script>
 // ============================================================
-// UTP PRACTICE - DENGAN WARNA KABEL
+// UTP PRACTICE - DENGAN GAMBAR LOKAL (straight.jpg & cros.jpg)
 // ============================================================
 
-// Data warna kabel T568B (dengan kode warna HEX)
+// Data warna kabel
 const warnaData = {
     'Putih Oranye': { color: '#f5a623', label: 'Putih Oranye' },
     'Oranye': { color: '#d47b28', label: 'Oranye' },
@@ -286,62 +270,38 @@ const colorOptions = Object.keys(warnaData);
 
 let utpType = 'straight';
 
-// ===== FUNGSI RENDER WARNA =====
-function renderWarnaRow(warnaList, label) {
-    let html = `<div style="margin-top:6px;font-size:0.7rem;color:var(--text-dim);">${label}:</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">`;
-    warnaList.forEach(w => {
-        const data = warnaData[w];
-        html += `<div style="display:flex;align-items:center;gap:4px;background:#0a1226;padding:2px 8px 2px 4px;border-radius:4px;border:1px solid var(--line);">
-                    <div style="width:16px;height:16px;border-radius:50%;background:${data.color};border:1px solid #3a4d78;flex-shrink:0;"></div>
-                    <span style="font-size:0.6rem;color:var(--text-dim);">${data.label}</span>
-                 </div>`;
-    });
-    html += '</div>';
-    return html;
-}
-
-function renderWarnaReferensi(type) {
-    const container = document.getElementById('warna-display');
-    if (!container) return;
-    
-    let html = '';
-    if (type === 'straight') {
-        html = `<div style="margin:6px 0;color:var(--text-dim);font-size:0.7rem;">✅ Kedua ujung sama → <strong style="color:var(--ok);">STRAIGHT</strong> (T568B - T568B)</div>`;
-        html += renderWarnaRow(t568b, 'Ujung 1 & 2 (T568B)');
-    } else {
-        html = `<div style="margin:6px 0;color:var(--text-dim);font-size:0.7rem;">✅ Ujung berbeda → <strong style="color:var(--neon-2);">CROSSOVER</strong> (T568A - T568B)</div>`;
-        html += renderWarnaRow(t568a, 'Ujung 1 (T568A)');
-        html += renderWarnaRow(t568b, 'Ujung 2 (T568B)');
-    }
-    container.innerHTML = html;
-}
-
 // ===== SET UTP TYPE =====
 function setUtpType(type) {
     utpType = type;
-    const ref = document.getElementById('utp-ref-content');
     const sBtn = document.getElementById('utp-straight-btn');
     const cBtn = document.getElementById('utp-crossover-btn');
+    const refTitle = document.getElementById('ref-title');
+    const refImage = document.getElementById('ref-image');
+    const refDesc = document.getElementById('ref-desc');
     
     if (type === 'straight') {
         sBtn.style.background = 'linear-gradient(135deg,var(--neon),#0ea5e9)';
         sBtn.style.color = '#00121f';
         cBtn.style.background = 'transparent';
         cBtn.style.color = 'var(--text-dim)';
-        ref.querySelector('strong').innerHTML = '📘 Referensi Urutan Warna — STRAIGHT (T568B):';
-        renderWarnaReferensi('straight');
+        refTitle.textContent = '📘 Referensi Urutan Warna — STRAIGHT (T568B)';
+        refImage.src = 'straight.jpg';
+        refImage.alt = 'Referensi Urutan Warna Kabel UTP Straight';
+        refDesc.innerHTML = '✅ Kedua ujung sama → <strong class="ok">STRAIGHT</strong> (T568B - T568B)';
     } else {
         cBtn.style.background = 'linear-gradient(135deg,var(--neon-2),#4b2ff7)';
         cBtn.style.color = '#fff';
         sBtn.style.background = 'transparent';
         sBtn.style.color = 'var(--text-dim)';
-        ref.querySelector('strong').innerHTML = '📙 Referensi Urutan Warna — CROSSOVER (T568A - T568B):';
-        renderWarnaReferensi('crossover');
+        refTitle.textContent = '📙 Referensi Urutan Warna — CROSSOVER (T568A - T568B)';
+        refImage.src = 'cros.jpg';
+        refImage.alt = 'Referensi Urutan Warna Kabel UTP Crossover';
+        refDesc.innerHTML = '✅ Ujung berbeda → <strong class="cross">CROSSOVER</strong> (T568A - T568B)';
     }
     resetUtp();
 }
 
-// ===== BUILD UTP GRID DENGAN WARNA =====
+// ===== BUILD UTP GRID =====
 function buildUtpGrid() {
     const grid = document.getElementById('utp-grid');
     if (!grid) return;
@@ -353,25 +313,13 @@ function buildUtpGrid() {
             <select id="pin-${i}">
                 <option value="">— pilih —</option>`;
         colorOptions.forEach(w => {
-            const data = warnaData[w];
-            html += `<option value="${w}" style="display:flex;align-items:center;gap:4px;">
-                        ${w}
-                     </option>`;
+            html += `<option value="${w}">${w}</option>`;
         });
         html += `</select>
             <div class="pin-fb" id="pin-fb-${i}"></div>
         </div>`;
     }
     grid.innerHTML = html;
-    
-    // Tambahkan warna ke dropdown (tidak semua browser support, tapi kita tambahkan styling via JS)
-    colorOptions.forEach(w => {
-        const data = warnaData[w];
-        document.querySelectorAll(`option[value="${w}"]`).forEach(opt => {
-            opt.style.background = '#0a1226';
-            opt.style.color = '#c8d6e5';
-        });
-    });
 }
 
 // ===== CHECK UTP =====
@@ -390,7 +338,7 @@ function checkUtp() {
         
         if (val === target[i]) {
             card.classList.add('correct');
-            fb.textContent = '✔';
+            fb.textContent = '✔ Benar';
             fb.className = 'pin-fb ok';
             correctCount++;
         } else if (val === '') {
@@ -417,20 +365,7 @@ function checkUtp() {
         let wrongList = wrongPins.map(p => {
             const targetWarna = target[p-1];
             const userWarna = document.getElementById('pin-'+(p-1))?.value || '';
-            const targetColor = warnaData[targetWarna]?.color || '#fff';
-            const userColor = warnaData[userWarna]?.color || '#555';
-            return `<li style="display:flex;align-items:center;gap:6px;">
-                        Pin ${p}: seharusnya 
-                        <div style="display:inline-flex;align-items:center;gap:3px;">
-                            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${targetColor};border:1px solid #3a4d78;"></span>
-                            <strong style="color:var(--ok);">${targetWarna}</strong>
-                        </div>
-                        , bukan 
-                        <div style="display:inline-flex;align-items:center;gap:3px;">
-                            <span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:${userColor};border:1px solid #3a4d78;"></span>
-                            <strong style="color:var(--danger);">${userWarna || '(kosong)'}</strong>
-                        </div>
-                    </li>`;
+            return `<li>Pin ${p}: seharusnya <strong style="color:var(--ok);">${targetWarna}</strong>, bukan <strong style="color:var(--danger);">${userWarna || '(kosong)'}</strong></li>`;
         }).join('');
         impact.innerHTML = `<h4 style="margin:0 0 4px;color:var(--danger);font-size:0.8rem;">⚠️ Dampak Kesalahan di Pin ${wrongPins.join(', ')}</h4>
             <ul style="color:var(--text-dim);font-size:0.7rem;line-height:1.6;margin:0 0 4px;padding-left:14px;">${wrongList}</ul>
@@ -471,9 +406,7 @@ function extractYoutubeId(link) {
         const url = new URL(link);
         if (url.hostname.includes('youtu.be')) return url.pathname.slice(1);
         if (url.searchParams.get('v')) return url.searchParams.get('v');
-        const embedMatch = u
-            
-        rl.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
+        const embedMatch = url.pathname.match(/\/embed\/([a-zA-Z0-9_-]{11})/);
         if (embedMatch) return embedMatch[1];
     } catch (e) {}
     return null;
